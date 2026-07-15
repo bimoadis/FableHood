@@ -2,12 +2,10 @@
 
 import React, { useState, useEffect, useRef } from 'react';
 import Link from 'next/link';
+import { Connection, Transaction, SystemProgram, PublicKey } from '@solana/web3.js';
+import bs58 from 'bs58';
 
-const PRESETS = [
-  { name: 'Safe Utility Token', address: '0x1516d9400e0ffc1a0b9517b726e251177d4c1d8f' },
-  { name: 'Dynamic Tax Flagged', address: '0x72a17a3c0a4b3014814fe4713c2d32f2f2849200' },
-  { name: 'Honeypot Contract', address: '0x9999999999999999999999999999999999999000' }
-];
+
 
 export default function ForensicsConsole() {
   const [walletConnected, setWalletConnected] = useState(false);
@@ -20,11 +18,21 @@ export default function ForensicsConsole() {
   const [logs, setLogs] = useState<string[]>([]);
   const [scanResult, setScanResult] = useState<any>(null);
   const [forceScan, setForceScan] = useState(false);
+  const [freeScansLeft, setFreeScansLeft] = useState<number>(3);
 
   // Payment Gating
   const [showPaymentModal, setShowPaymentModal] = useState(false);
   const [isPaying, setIsPaying] = useState(false);
   const [paymentLogs, setPaymentLogs] = useState<string[]>([]);
+
+  // Custom FableHood Notification System
+  const [notification, setNotification] = useState<{ message: string; type: 'error' | 'success' | 'info' } | null>(null);
+  const showToast = (message: string, type: 'error' | 'success' | 'info' = 'info') => {
+    setNotification({ message, type });
+    setTimeout(() => {
+      setNotification((prev) => (prev?.message === message ? null : prev));
+    }, 4500);
+  };
 
   const terminalEndRef = useRef<HTMLDivElement>(null);
 
@@ -42,69 +50,126 @@ export default function ForensicsConsole() {
     }
   }, [logs, paymentLogs]);
 
-  // Connect real EVM wallet from browser provider
+  // Connect real Solana wallet from browser provider and perform SIWS authentication
   const connectWallet = async () => {
     try {
-      if (typeof window !== 'undefined' && (window as any).ethereum) {
-        const accounts = await (window as any).ethereum.request({ method: 'eth_requestAccounts' });
-        const addr = accounts[0];
-        setWalletAddress(addr);
-        setWalletConnected(true);
-        
-        // Fetch actual account balance
-        const balanceHex = await (window as any).ethereum.request({
-          method: 'eth_getBalance',
-          params: [addr, 'latest']
-        });
-        const balanceEth = parseInt(balanceHex, 16) / 1e18;
-        setEthBalance(balanceEth);
+      if (typeof window !== 'undefined' && (window as any).solana) {
+        const provider = (window as any).solana;
+        if (provider.isPhantom) {
+          const response = await provider.connect();
+          const addr = response.publicKey.toString();
+          
+          // 1. Fetch secure nonce and session ID from backend
+          const nonceRes = await fetch('/api/auth/nonce');
+          if (!nonceRes.ok) throw new Error('Failed to retrieve authentication nonce');
+          const { nonce, sessionId } = await nonceRes.json();
+
+          // 2. Construct standard compliant SIWS (ERC-4361 like) message
+          const domain = window.location.host;
+          const message = `${domain} wants you to sign in with your Solana account:
+${addr}
+
+Sign in to Fable Hood.
+
+URI: ${window.location.origin}
+Version: 1
+Chain ID: 101
+Nonce: ${nonce}
+Issued At: ${new Date().toISOString()}`;
+
+          // 3. Request cryptographic signature from user's wallet extension
+          const encodedMessage = new TextEncoder().encode(message);
+          const { signature } = await provider.signMessage(encodedMessage, 'utf8');
+          const bs58Signature = bs58.encode(signature);
+
+          // 4. Verify signature on backend to activate session & persist wallet address
+          const verifyRes = await fetch('/api/auth/verify', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ message, signature: bs58Signature, sessionId })
+          });
+
+          if (!verifyRes.ok) {
+            const errData = await verifyRes.json();
+            throw new Error(errData.error || 'SIWS authentication failed');
+          }
+
+          const verifyData = await verifyRes.json();
+          localStorage.setItem('fablehood_session_id', verifyData.sessionId);
+          setWalletAddress(addr);
+          setWalletConnected(true);
+          
+          // Use server-fetched balance to prevent browser client-side CORS blocks
+          const balanceSol = parseFloat(verifyData.balance || '0.0000');
+          setEthBalance(balanceSol);
+
+          // Fetch actual profile status for free trials
+          const statusRes = await fetch('/api/scan', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ walletAddress: addr })
+          });
+          if (statusRes.ok) {
+            const statusData = await statusRes.json();
+            setFreeScansLeft(statusData.freeScansLeft);
+          }
+        }
       } else {
-        alert('EVM Injected Wallet (MetaMask/Phantom) not found. Please install a wallet extension.');
+        showToast('Phantom Wallet extension not found. Please install a Solana wallet.', 'error');
       }
-    } catch (err) {
-      console.error('Wallet connection failed:', err);
+    } catch (err: any) {
+      console.error('Wallet connection & SIWS failed:', err);
+      showToast(err.message || 'Authentication failed.', 'error');
     }
   };
 
-  // Process live gating payment using window.ethereum eth_sendTransaction
+  // Process live gating payment using window.solana signAndSendTransaction
   const handleProcessPayment = async () => {
-    if (typeof window === 'undefined' || !(window as any).ethereum) {
-      alert('Wallet not found.');
+    if (typeof window === 'undefined' || !(window as any).solana) {
+      showToast('Solana wallet (Phantom) not found.', 'error');
       return;
     }
     
     setIsPaying(true);
-    setPaymentLogs(['Connecting to wallet provider...', 'Preparing gating fallback fee transaction: 0.05 ETH...']);
+    setPaymentLogs(['Connecting to Solana network...', 'Preparing gating fallback fee transaction: 0.03 SOL...']);
     
     try {
-      const accounts = await (window as any).ethereum.request({ method: 'eth_requestAccounts' });
-      const from = accounts[0];
-      const treasuryAddress = '0xF00D0000000000000000000000000000B453'; 
+      const provider = (window as any).solana;
+      const connection = new Connection('https://api.mainnet-beta.solana.com', 'confirmed');
+      const fromPubkey = new PublicKey(provider.publicKey.toString());
       
-      const txParams = {
-        from: from,
-        to: treasuryAddress,
-        value: '0x' + (0.05 * 1e18).toString(16), // 0.05 ETH in Wei hex
-        chainId: '0x1237' // 4663 in Hex (Robinhood Chain L2)
-      };
+      const rawTreasury = process.env.NEXT_PUBLIC_TREASURY_ADDRESS || 'FfC5Q7mD9m6VwWbGRxGz4m9Zk9PzGz5pGz5pGz5pGz5p';
+      let treasuryPubkeyString = rawTreasury;
+      if (rawTreasury.startsWith('0x')) {
+        treasuryPubkeyString = 'FfC5Q7mD9m6VwWbGRxGz4m9Zk9PzGz5pGz5pGz5pGz5p'; // fallback valid base58 Solana key
+      }
+      const treasuryPubkey = new PublicKey(treasuryPubkeyString);
 
-      setPaymentLogs(prev => [...prev, 'Prompting signature in your Web3 wallet extension...']);
+      const transaction = new Transaction().add(
+        SystemProgram.transfer({
+          fromPubkey,
+          toPubkey: treasuryPubkey,
+          lamports: Math.floor(0.03 * 1e9) // 0.03 SOL in Lamports
+        })
+      );
       
-      const txHash = await (window as any).ethereum.request({
-        method: 'eth_sendTransaction',
-        params: [txParams]
-      });
+      const { blockhash } = await connection.getLatestBlockhash();
+      transaction.recentBlockhash = blockhash;
+      transaction.feePayer = fromPubkey;
 
-      setPaymentLogs(prev => [...prev, `Transaction submitted: ${txHash.slice(0, 16)}...`, 'Waiting for L2 block receipt confirmation...']);
+      setPaymentLogs(prev => [...prev, 'Prompting signature in your Phantom wallet extension...']);
       
+      const { signature } = await provider.signAndSendTransaction(transaction);
+      setPaymentLogs(prev => [...prev, `Transaction submitted: ${signature.slice(0, 16)}...`, 'Waiting for Solana block confirmation...']);
+      
+      await connection.confirmTransaction(signature, 'confirmed');
+      
+      setPaymentLogs(prev => [...prev, '✅ Payment confirmed on-chain! Access unlocked.']);
+      setEthBalance(1.0); // Grant scanner access
+      setIsPaying(false);
       setTimeout(() => {
-        setPaymentLogs(prev => [...prev, '✅ Payment confirmed on-chain! Access unlocked.']);
-        setEthBalance(1.0); // Grant scanner access
-        setIsPaying(false);
-        setTimeout(() => {
-          setShowPaymentModal(false);
-        }, 1000);
-      }, 3000);
+        setShowPaymentModal(false);
+      }, 1000);
       
     } catch (err: any) {
       setPaymentLogs(prev => [...prev, `❌ Transaction failed: ${err.message || err}`]);
@@ -117,8 +182,9 @@ export default function ForensicsConsole() {
     if (!targetAddress) return;
     const cleanCA = targetAddress.trim().toLowerCase();
 
-    // Gating check
-    if (ethBalance < 0.05) {
+    // Gating check: Allow if balance >= 0.03 SOL OR if they have free trials left
+    const hasAccess = ethBalance >= 0.03 || freeScansLeft > 0;
+    if (!hasAccess) {
       setShowPaymentModal(true);
       return;
     }
@@ -167,6 +233,9 @@ export default function ForensicsConsole() {
             `Safety Score: ${data.trustScore}% - Risk Level: ${data.riskLevel}`
           ]);
           setScanResult(data);
+          if (data.freeScansLeft !== undefined) {
+            setFreeScansLeft(data.freeScansLeft);
+          }
           setTimeout(() => {
             setConsoleStep('result');
           }, 600);
@@ -213,12 +282,15 @@ export default function ForensicsConsole() {
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
             {walletConnected ? (
-              <div style={{ display: 'flex', alignItems: 'center', gap: '12px', fontFamily: 'monospace', fontSize: '12px' }}>
-                <span style={{ opacity: 0.8 }}>{walletAddress.slice(0, 6)}...{walletAddress.slice(-4)}</span>
-                <span style={{ color: 'var(--emerald)', background: 'var(--emerald-pale)', border: '1px solid rgba(36, 196, 127, 0.35)', padding: '4px 8px' }}>
-                  {ethBalance.toFixed(2)} ETH
+              <div style={{ display: 'flex', alignItems: 'center', gap: '14px', fontFamily: 'JetBrains Mono, monospace', fontSize: '13px' }}>
+                <span style={{ color: '#88928c' }}>{walletAddress.slice(0, 6)}...{walletAddress.slice(-4)}</span>
+                <span style={{ border: '1px solid rgba(20, 129, 79, 0.5)', color: 'var(--emerald)', padding: '4px 10px', background: 'rgba(20, 129, 79, 0.05)' }}>
+                  {ethBalance.toFixed(3)} SOL
                 </span>
-                <button onClick={() => setWalletConnected(false)} style={{ color: 'var(--red)', border: 'none', background: 'transparent', cursor: 'pointer' }}>Disconnect</button>
+                <span style={{ border: '1px solid rgba(228, 113, 60, 0.5)', color: 'var(--orange)', padding: '4px 10px', background: 'rgba(228, 113, 60, 0.05)' }}>
+                  Free {freeScansLeft}/3
+                </span>
+                <button onClick={() => setWalletConnected(false)} style={{ color: '#e04a5f', border: 'none', background: 'transparent', cursor: 'pointer', padding: 0, fontSize: 'inherit', fontFamily: 'inherit' }}>Disconnect</button>
               </div>
             ) : (
               <button onClick={connectWallet} className="btn btn-primary notch-sm" style={{ padding: '6px 12px', fontSize: '12px' }}>
@@ -243,32 +315,32 @@ export default function ForensicsConsole() {
             Runs sandbox trade simulations, ownership key audits, and liquidity lock verifications.
           </p>
 
-          <div className="scanner notch" style={{ margin: '0 auto 24px', background: '#080c09', border: '1.5px solid var(--line-bright)', padding: '10px', display: 'flex', gap: '10px' }}>
+          <div className="scanner notch" style={{ margin: '0 auto 24px', background: '#080c09', border: '1.5px solid var(--line-bright)', padding: '10px', display: 'flex', gap: '10px', opacity: walletConnected ? 1 : 0.6 }}>
             <input 
               type="text" 
-              placeholder="Enter contract address (0x...)" 
+              placeholder={walletConnected ? "Enter contract address (0x... or Solana Address)" : "[ Connect Wallet First to Enable Scanner ]"} 
               value={contractInput}
               onChange={(e) => setContractInput(e.target.value)}
-              style={{ flex: 1, border: 'none', background: 'transparent', fontFamily: 'JetBrains Mono, monospace', fontSize: '14.5px', padding: '14px 16px', color: '#f2f6f3', outline: 'none' }} 
+              disabled={!walletConnected}
+              style={{ flex: 1, border: 'none', background: 'transparent', fontFamily: 'JetBrains Mono, monospace', fontSize: '14.5px', padding: '14px 16px', color: '#f2f6f3', outline: 'none', cursor: walletConnected ? 'text' : 'not-allowed' }} 
             />
-            <button onClick={() => handleStartScan(contractInput)} className="btn btn-primary notch-sm" id="btn-start-audit">Analyze Asset</button>
+            <button 
+              onClick={() => {
+                if (!walletConnected) {
+                  alert('Please connect your Solana wallet first!');
+                  return;
+                }
+                handleStartScan(contractInput);
+              }} 
+              className="btn btn-primary notch-sm" 
+              id="btn-start-audit"
+              style={{ opacity: walletConnected ? 1 : 0.5, cursor: walletConnected ? 'pointer' : 'not-allowed' }}
+            >
+              Analyze Asset
+            </button>
           </div>
 
-          <div className="presets" style={{ justifyContent: 'center', display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
-            {PRESETS.map((preset) => (
-              <span 
-                key={preset.address} 
-                onClick={() => {
-                  setContractInput(preset.address);
-                  handleStartScan(preset.address);
-                }} 
-                className="preset" 
-                style={{ background: 'var(--bg-card)', borderColor: 'var(--line)' }}
-              >
-                {preset.name}
-              </span>
-            ))}
-          </div>
+
 
           <div style={{ marginTop: '20px', display: 'flex', justifyContent: 'center' }}>
             <label style={{ display: 'flex', alignItems: 'center', gap: '8px', fontSize: '12px', fontFamily: 'monospace', opacity: 0.8, cursor: 'pointer' }}>
@@ -422,12 +494,12 @@ export default function ForensicsConsole() {
             </button>
 
             <h3 style={{ color: 'var(--orange)', fontSize: '18px', fontWeight: 'bold', marginBottom: '8px' }}>
-              ⚠️ Gating Limit: 0.05 ETH Required
+              ⚠️ Gating Limit: 0.03 SOL Required
             </h3>
             
             <p style={{ fontSize: '12px', opacity: 0.85, lineHeight: 1.6, marginBottom: '20px' }}>
-              Your current simulated wallet balance is below the scanner gating threshold (<span style={{ fontWeight: 'bold' }}>0.05 ETH</span>). 
-              Authorize a fallback payment of <span style={{ fontWeight: 'bold', color: 'var(--orange)' }}>0.05 ETH</span> to activate the forensic scanner.
+              Your current simulated wallet balance is below the scanner gating threshold (<span style={{ fontWeight: 'bold' }}>0.03 SOL</span>). 
+              Authorize a fallback payment of <span style={{ fontWeight: 'bold', color: 'var(--orange)' }}>0.03 SOL</span> to activate the forensic scanner.
             </p>
 
             {isPaying ? (
@@ -439,7 +511,7 @@ export default function ForensicsConsole() {
               </div>
             ) : (
               <button onClick={handleProcessPayment} className="btn btn-primary notch-sm" style={{ width: '100%', padding: '12px', justifyContent: 'center', marginBottom: '16px' }}>
-                Pay 0.05 ETH Fallback Fee
+                Pay 0.03 SOL Fallback Fee
               </button>
             )}
 
@@ -447,6 +519,46 @@ export default function ForensicsConsole() {
               SLA billing validation processed via active RPC polling.
             </p>
           </div>
+        </div>
+      )}
+
+      {/* Custom FableHood Terminal Toast Notification */}
+      {notification && (
+        <div 
+          style={{
+            position: 'fixed',
+            bottom: '24px',
+            right: '24px',
+            zIndex: 100,
+            background: 'var(--bg-raised)',
+            borderLeft: `4px solid ${notification.type === 'error' ? 'var(--red)' : notification.type === 'success' ? 'var(--emerald)' : 'var(--orange)'}`,
+            borderTop: '1.5px solid var(--line-bright)',
+            borderRight: '1.5px solid var(--line-bright)',
+            borderBottom: '1.5px solid var(--line-bright)',
+            padding: '16px 20px',
+            color: '#f2f6f3',
+            maxWidth: '360px',
+            boxShadow: '0 20px 40px rgba(0,0,0,0.6)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '12px',
+            fontFamily: 'JetBrains Mono, monospace',
+            fontSize: '13px'
+          }}
+          className="notch-sm animate-fadeIn"
+        >
+          <span style={{ fontSize: '18px' }}>
+            {notification.type === 'error' ? '⚠️' : notification.type === 'success' ? '✅' : '⚙️'}
+          </span>
+          <div style={{ flex: 1, lineHeight: 1.4 }}>
+            {notification.message}
+          </div>
+          <button 
+            onClick={() => setNotification(null)}
+            style={{ background: 'transparent', border: 'none', color: '#88928c', cursor: 'pointer', fontSize: '14px', paddingLeft: '8px' }}
+          >
+            ✕
+          </button>
         </div>
       )}
 

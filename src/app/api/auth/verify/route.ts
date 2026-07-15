@@ -1,8 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { db } from '@/db';
 import { walletProfiles, walletSessions } from '@/db/schema';
-import { eq, and } from 'drizzle-orm';
-import { verifyMessage } from 'viem';
+import { eq } from 'drizzle-orm';
+import { verifyMessage as verifyEvmMessage } from 'viem';
+import nacl from 'tweetnacl';
+import bs58 from 'bs58';
 
 export async function POST(req: NextRequest) {
   try {
@@ -35,11 +37,12 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Session/nonce expired' }, { status: 400 });
     }
 
-    // 2. Parse address and nonce from SIWE message
-    // A standard SIWE message format contains lines like:
-    // Address: 0x...
-    // Nonce: abc...
-    const addressMatch = message.match(/Address:\s*(0x[a-fA-F0-9]{40})/i);
+    // 2. Parse address and nonce from SIWE/SIWS message
+    // Support base58 Solana addresses (32-44 alphanumeric characters) and EVM hex addresses (40 hex characters)
+    const addressMatch = message.match(/Address:\s*([1-9A-HJ-NP-Za-km-z]{32,44})/i) || 
+                        message.match(/^([1-9A-HJ-NP-Za-km-z]{32,44})$/m) ||
+                        message.match(/Address:\s*(0x[a-fA-F0-9]{40})/i) || 
+                        message.match(/^(0x[a-fA-F0-9]{40})$/m);
     const nonceMatch = message.match(/Nonce:\s*([a-zA-Z0-9]+)/i);
 
     const address = addressMatch?.[1];
@@ -54,22 +57,38 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Cryptographic nonce mismatch' }, { status: 400 });
     }
 
-    // 3. Verify signature using Viem (checks if address signed the exact message)
-    const isValid = await verifyMessage({
-      address: address as `0x${string}`,
-      message,
-      signature,
-    });
+    const isSolana = !address.startsWith('0x');
+    let isValid = false;
+
+    // 3. Verify signature
+    if (isSolana) {
+      try {
+        const messageBytes = new TextEncoder().encode(message);
+        const signatureBytes = bs58.decode(signature);
+        const publicKeyBytes = bs58.decode(address);
+        isValid = nacl.sign.detached.verify(messageBytes, signatureBytes, publicKeyBytes);
+      } catch (err) {
+        console.error('Solana verification error:', err);
+      }
+    } else {
+      isValid = await verifyEvmMessage({
+        address: address as `0x${string}`,
+        message,
+        signature,
+      });
+    }
 
     if (!isValid) {
       return NextResponse.json({ error: 'Signature verification failed' }, { status: 400 });
     }
 
+    const cleanAddress = isSolana ? address : address.toLowerCase();
+
     // 4. Provision wallet profile (upsert on conflict do nothing)
     await db
       .insert(walletProfiles)
       .values({
-        address: address.toLowerCase(),
+        address: cleanAddress,
         trust: '1.0',
         txCount: 0,
       })
@@ -79,15 +98,39 @@ export async function POST(req: NextRequest) {
     await db
       .update(walletSessions)
       .set({
-        address: address.toLowerCase(),
+        address: cleanAddress,
         active: true,
       })
       .where(eq(walletSessions.id, sessionId));
 
+    // Fetch balance on server side to avoid client CORS restrictions
+    let balanceSol = '0.0000';
+    if (isSolana) {
+      try {
+        const rpcUrl = process.env.HELIUS_API_KEY || 'https://api.mainnet-beta.solana.com';
+        const balRes = await fetch(rpcUrl, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            jsonrpc: '2.0',
+            id: 1,
+            method: 'getBalance',
+            params: [cleanAddress]
+          })
+        });
+        const balData = await balRes.json();
+        const balanceLamports = BigInt(balData.result?.value || 0);
+        balanceSol = (Number(balanceLamports) / 1e9).toFixed(4);
+      } catch (err) {
+        console.error('Error fetching Solana balance on server verify:', err);
+      }
+    }
+
     return NextResponse.json({
       success: true,
-      address: address.toLowerCase(),
+      address: cleanAddress,
       sessionId: session.id,
+      balance: balanceSol
     });
   } catch (error: any) {
     console.error('Error verifying auth signature:', error);

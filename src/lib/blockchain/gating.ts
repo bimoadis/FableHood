@@ -2,14 +2,43 @@ import { RobinhoodChainClient } from './client';
 import { createWalletClient, http, parseEther, getAddress } from 'viem';
 import { privateKeyToAccount } from 'viem/accounts';
 
-const GATING_THRESHOLD = parseEther('0.05'); // 0.05 ETH
+const GATING_THRESHOLD = parseEther('0.0005'); // 0.0005 ETH
 const FALLBACK_TREASURY_MOCK = '0x70997970C51812dc3A010C7d01b50e0d17dc79C8';
 
 export async function verifyFoodGating(address: string): Promise<{ hasAccess: boolean; balanceEth: string }> {
   try {
+    const isSolana = !address.startsWith('0x');
+    
+    if (isSolana) {
+      // Query Solana RPC using HELIUS_API_KEY endpoint
+      const rpcUrl = process.env.HELIUS_API_KEY || 'https://api.mainnet-beta.solana.com';
+      const response = await fetch(rpcUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          jsonrpc: '2.0',
+          id: 1,
+          method: 'getBalance',
+          params: [address]
+        })
+      });
+      
+      const data = await response.json();
+      const balanceLamports = BigInt(data.result?.value || 0);
+      const balanceSol = Number(balanceLamports) / 1e9; // 10^9 lamports in 1 SOL
+      const gatingSolThreshold = 0.03; // 0.03 SOL threshold
+      const hasAccess = balanceSol >= gatingSolThreshold;
+      
+      return {
+        hasAccess,
+        balanceEth: balanceSol.toFixed(4)
+      };
+    }
+
     const client = new RobinhoodChainClient();
     const hexBalance = await client.getBalance(address);
     const balanceWei = BigInt(hexBalance);
+    const GATING_THRESHOLD = parseEther('0.0005'); // 0.0005 ETH threshold
     const hasAccess = balanceWei >= GATING_THRESHOLD;
     
     // Convert to readable decimal ETH string
@@ -63,7 +92,7 @@ export async function executeMicroPayment(
       transport: http(rpcUrl)
     });
 
-    onProgress?.('Signing and sending 0.05 ETH micro-payment...');
+    onProgress?.('Signing and sending 0.0005 ETH micro-payment...');
     
     // Send transaction
     const txHash = await wallet.sendTransaction({

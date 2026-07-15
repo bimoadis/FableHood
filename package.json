@@ -10,11 +10,13 @@
   },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.111.0",
+    "@solana/web3.js": "^1.98.4",
     "@supabase/supabase-js": "^2.110.5",
     "@turnkey/api-key-stamper": "^0.6.7",
     "@upstash/ratelimit": "^2.0.8",
     "@upstash/redis": "^1.38.0",
     "@wagmi/core": "^3.6.1",
+    "bs58": "^6.0.0",
     "dotenv": "^17.4.2",
     "drizzle-orm": "^0.45.2",
     "framer-motion": "^12.42.2",
@@ -22,6 +24,7 @@
     "postgres": "^3.4.9",
     "react": "^18",
     "react-dom": "^18",
+    "tweetnacl": "^1.0.3",
     "viem": "^2.55.2",
     "wagmi": "^3.7.1"
   },

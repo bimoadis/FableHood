@@ -1,0 +1,1 @@
+ALTER TABLE "wallet_profiles" ADD COLUMN "free_scans_used" integer DEFAULT 0 NOT NULL;

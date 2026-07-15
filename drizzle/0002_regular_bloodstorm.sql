@@ -1,0 +1,1 @@
+ALTER TABLE "wallet_profiles" ADD COLUMN "free_spins" integer DEFAULT 0 NOT NULL;

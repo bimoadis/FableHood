@@ -11,6 +11,8 @@ export const walletProfiles = pgTable('wallet_profiles', {
   avgExtractionSol: numeric('avg_extraction_sol').default('0'),
   fundedSnipers: integer('funded_snipers').default(0),
   trust: numeric('trust').default('1.0'),
+  freeScansUsed: integer('free_scans_used').default(0).notNull(),
+  freeSpins: integer('free_spins').default(0).notNull(),
   updatedAt: timestamp('updated_at').defaultNow()
 });
 
