@@ -2,6 +2,33 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Custom Themed Scrollbar Styles */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--line-bright);
+  border: 1px solid var(--bg);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--emerald);
+}
+
+/* Firefox scrollbar support */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--line-bright) var(--bg);
+}
+
+
 :root {
   --bg: #fafbf9;
   --bg-raised: #f3f5f0;
