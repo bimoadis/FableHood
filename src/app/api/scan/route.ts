@@ -214,7 +214,7 @@ export async function POST(req: NextRequest) {
       console.log(`🧠 [Claude AI Audit] Invoking ${modelName} via proxy...`);
       const response = await anthropic.messages.create({
         model: modelName,
-        max_tokens: 800,
+        max_tokens: 4000,
         system: `You are Fable Hood's elite smart contract security auditor. Analyze the contract bytecode and details, and return a strict, raw JSON output without backticks or markdown formatting.
 The JSON must adhere EXACTLY to this schema:
 {
