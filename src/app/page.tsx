@@ -53,7 +53,7 @@ export default function LandingPage() {
               className="mascot" 
               src="/logoFOOD.png" 
               alt="Fable Hood Mascot" 
-              style={{ width: '80px', height: '80px', objectFit: 'contain' }} 
+              style={{ width: '80px', height: '80px', objectFit: 'contain', display: 'block', margin: '0 auto' }} 
             />
             <div className="reticle">
               <span className="corner tl"></span>
