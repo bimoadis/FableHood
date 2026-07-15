@@ -1,0 +1,1530 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <title>$FOOD — Fable Hood · Scan, Detect, and Trade Safely on Base Network</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link
+    href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono:wght@400;500;600;700&display=swap"
+    rel="stylesheet">
+  <style>
+    :root {
+      --bg: #fafbf9;
+      --bg-raised: #f3f5f0;
+      --bg-card: #ffffff;
+      --ink: #0d120f;
+      --ink-soft: #4a5c51;
+      --ink-faint: #829488;
+      --emerald: #14814f;
+      --emerald-deep: #0a4b30;
+      --emerald-pale: rgba(20, 129, 79, 0.08);
+      --orange: #e4713c;
+      --orange-soft: #f2a17a;
+      --orange-pale: rgba(228, 113, 60, 0.08);
+      --amber: #e4713c;
+      --red: #d32f2f;
+      --line: #e2e6df;
+      --line-bright: #cbd5c8;
+      --shadow: 0 1px 3px rgba(0, 0, 0, 0.05), 0 8px 24px rgba(13, 18, 15, 0.06);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    html {
+      scroll-behavior: smooth;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      background-image:
+        radial-gradient(circle at 1px 1px, rgba(20, 129, 79, 0.07) 1px, transparent 1px);
+      background-size: 26px 26px;
+      color: var(--ink);
+      font-family: 'Inter', sans-serif;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    ::selection {
+      background: var(--emerald);
+      color: #ffffff;
+    }
+
+    a {
+      color: inherit;
+    }
+
+    .wrap {
+      max-width: 1160px;
+      margin: 0 auto;
+      padding: 0 32px;
+    }
+
+    .mono {
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    /* ---------- Notch motif ---------- */
+    .notch {
+      clip-path: polygon(0% 10px, 10px 10px, 10px 0%,
+          calc(100% - 10px) 0%, calc(100% - 10px) 10px, 100% 10px,
+          100% calc(100% - 10px), calc(100% - 10px) calc(100% - 10px), calc(100% - 10px) 100%,
+          10px 100%, 10px calc(100% - 10px), 0% calc(100% - 10px));
+    }
+
+    .notch-sm {
+      clip-path: polygon(0% 6px, 6px 6px, 6px 0%,
+          calc(100% - 6px) 0%, calc(100% - 6px) 6px, 100% 6px,
+          100% calc(100% - 6px), calc(100% - 6px) calc(100% - 6px), calc(100% - 6px) 100%,
+          6px 100%, 6px calc(100% - 6px), 0% calc(100% - 6px));
+    }
+
+    /* ---------- Contract ticker bar ---------- */
+    .ticker {
+      background: var(--bg-raised);
+      border-bottom: 1px solid var(--line);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      color: var(--ink-soft);
+    }
+
+    .ticker .wrap {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      height: 34px;
+      letter-spacing: 0.01em;
+    }
+
+    .ticker b {
+      color: var(--amber);
+      font-weight: 600;
+    }
+
+    .ticker .addr {
+      color: var(--ink-soft);
+    }
+
+    .ticker button {
+      background: none;
+      border: 1px solid var(--line-bright);
+      color: var(--ink-faint);
+      font-family: inherit;
+      font-size: 10.5px;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      padding: 3px 9px;
+      cursor: pointer;
+      transition: border-color .15s ease, color .15s ease;
+    }
+
+    .ticker button:hover {
+      border-color: var(--emerald);
+      color: var(--emerald);
+    }
+
+    /* ---------- Header ---------- */
+    header {
+      position: sticky;
+      top: 0;
+      z-index: 20;
+      background: rgba(250, 251, 249, 0.88);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--line);
+    }
+
+    .nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 72px;
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-family: 'Space Grotesk', sans-serif;
+      font-weight: 700;
+      font-size: 19px;
+      letter-spacing: -0.01em;
+    }
+
+    .brand small {
+      display: block;
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 500;
+      font-size: 10px;
+      letter-spacing: 0.16em;
+      color: var(--emerald);
+      text-transform: uppercase;
+    }
+
+    .navlinks {
+      display: flex;
+      gap: 30px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      font-weight: 500;
+      letter-spacing: 0.09em;
+      text-transform: uppercase;
+      color: var(--ink-faint);
+    }
+
+    .navlinks a {
+      text-decoration: none;
+      transition: color .15s ease;
+    }
+
+    .navlinks a:hover,
+    .navlinks a:focus-visible {
+      color: var(--emerald);
+    }
+
+    .btn {
+      font-family: 'Inter', sans-serif;
+      font-weight: 600;
+      font-size: 14px;
+      border: none;
+      cursor: pointer;
+      padding: 12px 22px;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      transition: transform .15s ease, box-shadow .15s ease, background .15s ease;
+    }
+
+    .btn-primary {
+      background: var(--orange);
+      color: #ffffff;
+    }
+
+    .btn-primary:hover {
+      background: var(--orange-soft);
+      transform: translateY(-1px);
+    }
+
+    .btn-primary:focus-visible {
+      outline: 3px solid var(--orange-pale);
+      outline-offset: 2px;
+    }
+
+    .btn-ghost {
+      background: transparent;
+      color: var(--ink);
+      border: 1.5px solid var(--line-bright);
+      padding: 10px 20px;
+    }
+
+    .btn-ghost:hover {
+      border-color: var(--emerald);
+      color: var(--emerald);
+    }
+
+    /* ---------- Status pill ---------- */
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11.5px;
+      font-weight: 600;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      color: var(--emerald);
+      background: var(--emerald-pale);
+      border: 1px solid rgba(36, 196, 127, 0.35);
+      padding: 7px 14px;
+    }
+
+    .pill .dot {
+      width: 6px;
+      height: 6px;
+      background: var(--emerald);
+      display: inline-block;
+      border-radius: 1px;
+      animation: pulse 1.6s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+
+      0%,
+      100% {
+        opacity: 1
+      }
+
+      50% {
+        opacity: .3
+      }
+    }
+
+    /* ---------- Hero ---------- */
+    .hero {
+      padding: 76px 0 72px;
+      text-align: center;
+      position: relative;
+    }
+
+    .scan-target {
+      position: relative;
+      width: 148px;
+      margin: 0 auto 26px;
+    }
+
+    .scan-target svg.mascot {
+      width: 100px;
+      margin: 0 auto;
+      display: block;
+      filter: drop-shadow(0 12px 22px rgba(255, 131, 71, 0.22));
+    }
+
+    .reticle {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+    }
+
+    .reticle .corner {
+      position: absolute;
+      width: 18px;
+      height: 18px;
+      border: 2px solid var(--emerald);
+      opacity: 0.75;
+    }
+
+    .reticle .corner.tl {
+      top: -4px;
+      left: -4px;
+      border-right: none;
+      border-bottom: none;
+    }
+
+    .reticle .corner.tr {
+      top: -4px;
+      right: -4px;
+      border-left: none;
+      border-bottom: none;
+    }
+
+    .reticle .corner.bl {
+      bottom: -4px;
+      left: -4px;
+      border-right: none;
+      border-top: none;
+    }
+
+    .reticle .corner.br {
+      bottom: -4px;
+      right: -4px;
+      border-left: none;
+      border-top: none;
+    }
+
+    .reticle .sweep {
+      position: absolute;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, transparent, var(--emerald), transparent);
+      animation: sweep 2.6s ease-in-out infinite;
+      opacity: 0.85;
+    }
+
+    @keyframes sweep {
+      0% {
+        top: 4px;
+        opacity: 0;
+      }
+
+      10% {
+        opacity: .9;
+      }
+
+      90% {
+        opacity: .9;
+      }
+
+      100% {
+        top: calc(100% - 4px);
+        opacity: 0;
+      }
+    }
+
+    h1 {
+      font-family: 'Space Grotesk', sans-serif;
+      font-weight: 700;
+      font-size: 54px;
+      line-height: 1.07;
+      letter-spacing: -0.025em;
+      margin: 0 auto 20px;
+      max-width: 780px;
+    }
+
+    h1 .accent {
+      color: var(--emerald);
+    }
+
+    h1 .strike {
+      color: var(--ink-faint);
+      text-decoration: line-through;
+      text-decoration-color: var(--orange);
+      font-size: 0.62em;
+      display: block;
+      font-family: 'JetBrains Mono', monospace;
+      letter-spacing: 0.02em;
+      margin-bottom: 10px;
+      text-transform: uppercase;
+    }
+
+    .sub {
+      font-size: 16.5px;
+      color: var(--ink-soft);
+      max-width: 520px;
+      margin: 0 auto 40px;
+      line-height: 1.65;
+    }
+
+    .scanner {
+      max-width: 640px;
+      margin: 0 auto;
+      background: var(--bg-card);
+      border: 1.5px solid var(--line-bright);
+      box-shadow: var(--shadow);
+      padding: 10px;
+      display: flex;
+      gap: 10px;
+    }
+
+    .scanner input {
+      flex: 1;
+      border: none;
+      background: transparent;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 14.5px;
+      padding: 14px 16px;
+      color: var(--ink);
+    }
+
+    .scanner input::placeholder {
+      color: var(--ink-faint);
+    }
+
+    .scanner input:focus {
+      outline: none;
+    }
+
+    .scanner:focus-within {
+      border-color: var(--emerald);
+    }
+
+    .scanner .btn-primary {
+      flex-shrink: 0;
+    }
+
+    .presets {
+      max-width: 640px;
+      margin: 14px auto 0;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      justify-content: center;
+    }
+
+    .preset {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11.5px;
+      color: var(--ink-soft);
+      background: var(--bg-raised);
+      border: 1px solid var(--line);
+      padding: 7px 12px;
+      cursor: pointer;
+      transition: border-color .15s ease, color .15s ease;
+    }
+
+    .preset:hover {
+      border-color: var(--emerald);
+      color: var(--emerald);
+    }
+
+    .trust {
+      margin-top: 26px;
+      display: flex;
+      justify-content: center;
+      gap: 0;
+      flex-wrap: wrap;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12.5px;
+      color: var(--ink-faint);
+      border-top: 1px solid var(--line);
+      border-bottom: 1px solid var(--line);
+      max-width: 640px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .trust span {
+      padding: 14px 22px;
+      border-right: 1px solid var(--line);
+      flex: 1;
+    }
+
+    .trust span:last-child {
+      border-right: none;
+    }
+
+    .trust b {
+      color: var(--emerald);
+      font-weight: 600;
+      display: block;
+      font-size: 15px;
+      margin-bottom: 2px;
+    }
+
+    /* ---------- Section shared ---------- */
+    .section {
+      padding: 72px 0;
+    }
+
+    .section-head {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      margin-bottom: 40px;
+      gap: 24px;
+      border-bottom: 1px solid var(--line);
+      padding-bottom: 24px;
+    }
+
+    .section-head h2 {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 28px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      margin: 0 0 6px;
+    }
+
+    .section-head p {
+      color: var(--ink-soft);
+      margin: 0;
+      font-size: 14.5px;
+      max-width: 420px;
+    }
+
+    .section-tag {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11.5px;
+      color: var(--ink-faint);
+      letter-spacing: 0.09em;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    /* ---------- Capability grid ---------- */
+    .grid4 {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 18px;
+    }
+
+    .card {
+      background: var(--bg-card);
+      border: 1.5px solid var(--line);
+      padding: 24px 20px;
+      box-shadow: var(--shadow);
+      transition: transform .18s ease, border-color .18s ease;
+    }
+
+    .card:hover {
+      transform: translateY(-3px);
+      border-color: var(--emerald);
+    }
+
+    .card-top {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 20px;
+    }
+
+    .card-code {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      color: var(--emerald);
+      background: var(--emerald-pale);
+      border: 1px solid rgba(36, 196, 127, 0.3);
+      padding: 4px 8px;
+    }
+
+    .card-code.o {
+      color: var(--orange);
+      background: var(--orange-pale);
+      border-color: rgba(255, 131, 71, 0.3);
+    }
+
+    .card-code.w {
+      color: var(--red);
+      background: rgba(211, 47, 47, 0.08);
+      border-color: rgba(211, 47, 47, 0.3);
+    }
+
+    .card-icon {
+      width: 34px;
+      height: 34px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .card-icon svg {
+      width: 20px;
+      height: 20px;
+    }
+
+    .card h3 {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 16px;
+      font-weight: 600;
+      margin: 0 0 8px;
+      letter-spacing: -0.01em;
+    }
+
+    .card p {
+      font-size: 13.5px;
+      color: var(--ink-soft);
+      line-height: 1.55;
+      margin: 0 0 16px;
+    }
+
+    .card .stat {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 11px;
+      color: var(--emerald);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      border-top: 1px dashed var(--line);
+      padding-top: 12px;
+    }
+
+    .card .stat.warn {
+      color: var(--red);
+    }
+
+    /* ---------- Tool table (Under the hood) ---------- */
+    .tooltable {
+      border: 1px solid var(--line);
+      background: var(--bg-card);
+    }
+
+    .toolrow {
+      display: grid;
+      grid-template-columns: 1fr 1fr auto;
+      gap: 16px;
+      align-items: center;
+      padding: 15px 20px;
+      border-bottom: 1px solid var(--line);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 13px;
+    }
+
+    .toolrow:last-child {
+      border-bottom: none;
+    }
+
+    .toolrow .fn {
+      color: var(--ink);
+      font-weight: 600;
+    }
+
+    .toolrow .fn span {
+      color: var(--emerald);
+    }
+
+    .toolrow .src {
+      color: var(--ink-faint);
+    }
+
+    .toolrow .badge {
+      justify-self: end;
+      font-size: 10.5px;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--emerald);
+      border: 1px solid rgba(36, 196, 127, 0.35);
+      background: var(--emerald-pale);
+      padding: 3px 9px;
+    }
+
+    @media (max-width: 640px) {
+      .toolrow {
+        grid-template-columns: 1fr;
+        gap: 4px;
+      }
+
+      .toolrow .badge {
+        justify-self: start;
+        margin-top: 4px;
+      }
+    }
+
+    /* ---------- Process ---------- */
+    .process {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 0;
+      border: 1px solid var(--line);
+    }
+
+    .step {
+      padding: 28px 24px;
+      border-right: 1px solid var(--line);
+      position: relative;
+    }
+
+    .step:last-child {
+      border-right: none;
+    }
+
+    .step .n {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      color: var(--emerald);
+      letter-spacing: 0.1em;
+      margin-bottom: 14px;
+      display: block;
+    }
+
+    .step h4 {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 15.5px;
+      margin: 0 0 8px;
+      font-weight: 600;
+    }
+
+    .step p {
+      font-size: 13px;
+      color: var(--ink-soft);
+      line-height: 1.55;
+      margin: 0;
+    }
+
+    @media (max-width: 860px) {
+      .process {
+        grid-template-columns: 1fr;
+      }
+
+      .step {
+        border-right: none;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .step:last-child {
+        border-bottom: none;
+      }
+    }
+
+    /* ---------- Verdict banner ---------- */
+    .verdict {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+      background: var(--bg-raised);
+      border: 1.5px solid var(--line-bright);
+      padding: 30px 34px;
+      flex-wrap: wrap;
+    }
+
+    .verdict-left {
+      display: flex;
+      align-items: center;
+      gap: 18px;
+    }
+
+    .verdict-icon {
+      width: 46px;
+      height: 46px;
+      background: var(--emerald-pale);
+      border: 1px solid rgba(36, 196, 127, 0.35);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .verdict-icon svg {
+      width: 24px;
+      height: 24px;
+    }
+
+    .verdict h3 {
+      font-family: 'Space Grotesk', sans-serif;
+      margin: 0 0 4px;
+      font-size: 17px;
+    }
+
+    .verdict p {
+      margin: 0;
+      color: var(--ink-soft);
+      font-size: 13.5px;
+    }
+
+    /* ---------- Footer ---------- */
+    footer {
+      border-top: 1px solid var(--line);
+      padding: 34px 0;
+    }
+
+    .foot-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 16px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      color: var(--ink-faint);
+    }
+
+    .foot-brand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-family: 'Space Grotesk', sans-serif;
+      font-weight: 600;
+      color: var(--ink-soft);
+    }
+
+    .foot-brand svg {
+      width: 22px;
+    }
+
+    .foot-links {
+      display: flex;
+      gap: 22px;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+    }
+
+    .foot-links a {
+      text-decoration: none;
+    }
+
+    .foot-links a:hover {
+      color: var(--emerald);
+    }
+
+    @media (max-width: 860px) {
+      h1 {
+        font-size: 36px;
+      }
+
+      .grid4 {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .navlinks {
+        display: none;
+      }
+
+      .scanner {
+        flex-direction: column;
+      }
+
+      .scanner .btn-primary {
+        justify-content: center;
+      }
+
+      .trust {
+        flex-direction: column;
+      }
+
+      .trust span {
+        border-right: none;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .trust span:last-child {
+        border-bottom: none;
+      }
+
+      .verdict {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+    }
+
+    @media (max-width: 480px) {
+      .grid4 {
+        grid-template-columns: 1fr;
+      }
+
+      .wrap {
+        padding: 0 20px;
+      }
+
+      .ticker .wrap {
+        font-size: 10.5px;
+      }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      * {
+        animation: none !important;
+        transition: none !important;
+      }
+    }
+
+    /* ---------- Dark theme overrides ---------- */
+    body.dark-mode {
+      --bg: #050806;
+      --bg-raised: #0b110d;
+      --bg-card: #080c09;
+      --ink: #f2f6f3;
+      --ink-soft: #85968b;
+      --ink-faint: #4e5a52;
+      --line: #16221a;
+      --line-bright: #25392b;
+      --shadow: 0 4px 20px rgba(0, 0, 0, 0.8);
+      background-image:
+        radial-gradient(circle at 1px 1px, rgba(20, 129, 79, 0.15) 1px, transparent 1px);
+    }
+  </style>
+</head>
+
+<body>
+
+  <div id="landing-view">
+    <div class="ticker">
+      <div class="wrap">
+        <span>🍞 <b>$FOOD</b></span>
+        <span class="addr">0xF00D…B453</span>
+        <button
+          onclick="navigator.clipboard && navigator.clipboard.writeText('0xF00D0000000000000000000000000000B453')">Copy
+          CA</button>
+      </div>
+    </div>
+
+    <header>
+      <div class="wrap nav">
+        <div class="brand">
+          <!-- mascot logo -->
+          <svg width="34" height="34" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+            <polygon points="86,6 70,10 62,26 56,40 66,38 74,26 82,18" fill="#e4713c" />
+            <path d="M20 46 L26 34 L38 24 L52 18 L64 20 L70 30 L70 40 L60 42 L60 50 L26 50 L20 46 Z" fill="#14814f" />
+            <path d="M20 46 L70 40 L70 50 L20 50 Z" fill="#0a4b30" />
+            <path d="M14 50 L20 46 L70 40 L76 46 L76 54 L14 54 Z" fill="#14814f" />
+            <path
+              d="M10 58 Q10 50 18 50 L78 50 Q86 50 86 58 L86 66 Q86 70 82 70 L82 78 L74 78 L74 70 L64 70 L64 78 L56 78 L56 70 L40 70 L40 78 L32 78 L32 70 L22 70 L22 78 L14 78 L14 70 Q10 70 10 66 Z"
+              fill="#f2a17a" />
+            <rect x="30" y="56" width="9" height="9" fill="#fafbf9" />
+            <rect x="58" y="56" width="9" height="9" fill="#fafbf9" />
+          </svg>
+          <span>$FOOD<small>Fable Hood · Robinhood Chain</small></span>
+        </div>
+        <nav class="navlinks">
+          <a href="#scan">Scan</a>
+          <a href="#security">Security</a>
+          <a href="#tools">Tools</a>
+          <a href="#process">Process</a>
+        </nav>
+        <button class="btn btn-primary notch-sm">Connect Wallet</button>
+      </div>
+    </header>
+
+    <section class="hero" id="scan">
+      <div class="wrap">
+
+        <div class="scan-target">
+          <svg class="mascot" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+            <polygon points="86,6 70,10 62,26 56,40 66,38 74,26 82,18" fill="#e4713c" />
+            <path d="M20 46 L26 34 L38 24 L52 18 L64 20 L70 30 L70 40 L60 42 L60 50 L26 50 L20 46 Z" fill="#14814f" />
+            <path d="M20 46 L70 40 L70 50 L20 50 Z" fill="#0a4b30" />
+            <path d="M14 50 L20 46 L70 40 L76 46 L76 54 L14 54 Z" fill="#14814f" />
+            <path
+              d="M10 58 Q10 50 18 50 L78 50 Q86 50 86 58 L86 66 Q86 70 82 70 L82 78 L74 78 L74 70 L64 70 L64 78 L56 78 L56 70 L40 70 L40 78 L32 78 L32 70 L22 70 L22 78 L14 78 L14 70 Q10 70 10 66 Z"
+              fill="#f2a17a" />
+            <rect x="30" y="56" width="9" height="9" fill="#fafbf9" />
+            <rect x="58" y="56" width="9" height="9" fill="#fafbf9" />
+          </svg>
+          <div class="reticle">
+            <span class="corner tl"></span><span class="corner tr"></span>
+            <span class="corner bl"></span><span class="corner br"></span>
+            <span class="sweep"></span>
+          </div>
+        </div>
+
+        <div class="pill" style="margin-bottom:26px;"><span class="dot"></span> READY · Live on Robinhood L2</div>
+
+        <h1><span class="strike">Not another rug</span>Scan, Detect, and <span class="accent">Trade Safely</span> on
+          Robinhood Chain</h1>
+        <p class="sub">$FOOD (Fable Hood) audits DeFi assets and Tokenized RWAs on Robinhood Chain — verifying Arbitrum
+          Orbit smart contracts, liquidity, and ownership before you sign.</p>
+
+        <div style="margin-bottom: 30px; display: flex; justify-content: center; gap: 16px; flex-wrap: wrap;">
+          <button class="btn btn-primary notch-sm btn-open-console">Start Forensic Scan</button>
+        </div>
+
+        <div class="trust">
+          <span><b>12,482</b>contracts scanned today</span>
+          <span><b>340</b>security flags caught</span>
+          <span><b>100ms</b>L2 block time (Arbitrum Orbit)</span>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="security">
+      <div class="wrap">
+        <div class="section-head">
+          <div>
+            <h2>Four checks, one scan</h2>
+            <p>Every address run through $FOOD clears the same set of traps before you ever get a green light.</p>
+          </div>
+          <div class="section-tag">// security.modules</div>
+        </div>
+
+        <div class="grid4">
+
+          <div class="card notch">
+            <div class="card-top">
+              <div class="card-code">HONEY</div>
+              <div class="card-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="var(--emerald)" stroke-width="1.8" stroke-linecap="round"
+                  stroke-linejoin="round">
+                  <path d="M9 3h6M10 3v5.5L4.8 17a2 2 0 0 0 1.7 3h11a2 2 0 0 0 1.7-3L14 8.5V3" />
+                  <path d="M7.5 14h9" />
+                </svg>
+              </div>
+            </div>
+            <h3>Honeypot Sandbox</h3>
+            <p>Simulates a real buy and sell against the contract to confirm you can actually exit the trade.</p>
+            <div class="stat"><span>●</span> Sell path verified</div>
+          </div>
+
+          <div class="card notch">
+            <div class="card-top">
+              <div class="card-code o">LIQ</div>
+              <div class="card-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="var(--orange)" stroke-width="1.8" stroke-linecap="round"
+                  stroke-linejoin="round">
+                  <path d="M4 19V9M10 19V5M16 19v-7M22 19H2" />
+                </svg>
+              </div>
+            </div>
+            <h3>Liquidity Tracker</h3>
+            <p>Watches pooled liquidity in real time and flags sudden pulls before they hit your wallet.</p>
+            <div class="stat"><span>●</span> $482K locked, 180d</div>
+          </div>
+
+          <div class="card notch">
+            <div class="card-top">
+              <div class="card-code">OWN</div>
+              <div class="card-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="var(--emerald)" stroke-width="1.8" stroke-linecap="round"
+                  stroke-linejoin="round">
+                  <path d="M12 3l7 3v6c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V6l7-3z" />
+                  <path d="M9 12l2 2 4-4" />
+                </svg>
+              </div>
+            </div>
+            <h3>Ownership Audit</h3>
+            <p>Checks who still holds the keys — renounced, multisig, or a single wallet with full control.</p>
+            <div class="stat"><span>●</span> Ownership renounced</div>
+          </div>
+
+          <div class="card notch">
+            <div class="card-top">
+              <div class="card-code w">TAX</div>
+              <div class="card-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="var(--red)" stroke-width="1.8" stroke-linecap="round"
+                  stroke-linejoin="round">
+                  <circle cx="7" cy="7" r="3" />
+                  <circle cx="17" cy="17" r="3" />
+                  <path d="M18 6L6 18" />
+                </svg>
+              </div>
+            </div>
+            <h3>Dynamic Tax Detection</h3>
+            <p>Reads the live buy and sell tax, including hidden ramps that only trigger after launch.</p>
+            <div class="stat warn"><span>●</span> Sell tax rises after block 40</div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="tools" style="padding-top:0;">
+      <div class="wrap">
+        <div class="section-head">
+          <div>
+            <h2>Real tools. Real chain data.</h2>
+            <p>Every module below is backed by a live Robinhood L2 RPC call or local execution simulation, not a canned
+              answer.</p>
+          </div>
+          <div class="section-tag">// under.the_hood</div>
+        </div>
+
+        <div class="tooltable">
+          <div class="toolrow">
+            <div class="fn"><span>simulate_buy_sell</span>()</div>
+            <div class="src">Robinhood mainnet fork</div>
+            <div class="badge">Live</div>
+          </div>
+          <div class="toolrow">
+            <div class="fn"><span>get_liquidity_lock</span>()</div>
+            <div class="src">DEX pool reader</div>
+            <div class="badge">Live</div>
+          </div>
+          <div class="toolrow">
+            <div class="fn"><span>get_ownership</span>()</div>
+            <div class="src">Contract state reader</div>
+            <div class="badge">Live</div>
+          </div>
+          <div class="toolrow">
+            <div class="fn"><span>get_tax_schedule</span>()</div>
+            <div class="src">Bytecode simulation</div>
+            <div class="badge">Live</div>
+          </div>
+          <div class="toolrow">
+            <div class="fn"><span>get_holder_distribution</span>()</div>
+            <div class="src">Chain indexer</div>
+            <div class="badge">Live</div>
+          </div>
+          <div class="toolrow">
+            <div class="fn"><span>verdict_engine</span>()</div>
+            <div class="src">Composite risk score</div>
+            <div class="badge">Live</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section" id="process">
+      <div class="wrap">
+        <div class="section-head">
+          <div>
+            <h2>Simple on the surface. Thorough underneath.</h2>
+            <p>The same four-stage pipeline runs on every address, in this order, every time.</p>
+          </div>
+          <div class="section-tag">// scan.pipeline</div>
+        </div>
+
+        <div class="process">
+          <div class="step">
+            <span class="n mono">01 · PASTE</span>
+            <h4>Drop the address</h4>
+            <p>Paste any Robinhood Chain contract address into the scanner — no wallet connection required to run a
+              check.
+            </p>
+          </div>
+          <div class="step">
+            <span class="n mono">02 · FORK</span>
+            <h4>Simulate the trade</h4>
+            <p>$FOOD forks Robinhood mainnet L2 and runs transaction simulations to verify contract behavior.</p>
+          </div>
+          <div class="step">
+            <span class="n mono">03 · AUDIT</span>
+            <h4>Read the contract</h4>
+            <p>Ownership, liquidity locks, and tax logic are pulled straight from chain state and bytecode.</p>
+          </div>
+          <div class="step">
+            <span class="n mono">04 · VERDICT</span>
+            <h4>Get the call</h4>
+            <p>Everything rolls up into a single pass or flag verdict, in about two seconds.</p>
+          </div>
+        </div>
+
+        <div style="height:18px;"></div>
+
+        <div class="verdict notch">
+          <div class="verdict-left">
+            <div class="verdict-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="var(--emerald)" stroke-width="1.8" stroke-linecap="round"
+                stroke-linejoin="round">
+                <path d="M20 6L9 17l-5-5" />
+              </svg>
+            </div>
+            <div>
+              <h3>The hoard may be hidden. The tell usually isn't.</h3>
+              <p>Paste an address above and let $FOOD run the full pipeline before you sign anything.</p>
+            </div>
+          </div>
+          <button class="btn btn-primary notch-sm btn-open-console">Scan a Token</button>
+        </div>
+      </div>
+    </section>
+
+    <footer>
+      <div class="wrap foot-row">
+        <div class="foot-brand">
+          <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+            <polygon points="86,6 70,10 62,26 56,40 66,38 74,26 82,18" fill="#e4713c" />
+            <path d="M20 46 L26 34 L38 24 L52 18 L64 20 L70 30 L70 40 L60 42 L60 50 L26 50 L20 46 Z" fill="#14814f" />
+            <path
+              d="M10 58 Q10 50 18 50 L78 50 Q86 50 86 58 L86 66 Q86 70 82 70 L82 78 L74 78 L74 70 L64 70 L64 78 L56 78 L56 70 L40 70 L40 78 L32 78 L32 70 L22 70 L22 78 L14 78 L14 70 Q10 70 10 66 Z"
+              fill="#f2a17a" />
+          </svg>
+          $FOOD · Fable Hood
+        </div>
+        <div class="foot-links">
+          <a href="#tools">Docs</a>
+          <a href="#tools">API</a>
+          <a href="#">Twitter</a>
+          <a href="#">Telegram</a>
+        </div>
+        <div>© 2026 Fable Hood. Not financial advice.</div>
+      </div>
+    </footer>
+
+  </div> <!-- #landing-view -->
+
+  <!-- Forensics View (Dark themed dashboard) -->
+  <div id="forensics-view"
+    style="display: none; min-height: 100vh; background: #050806; color: #f2f6f3; font-family: 'Inter', sans-serif;">
+    <header style="background: rgba(5, 8, 6, 0.9); border-bottom: 1px solid var(--line);">
+      <div class="wrap nav">
+        <div class="brand">
+          <svg width="34" height="34" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+            <polygon points="86,6 70,10 62,26 56,40 66,38 74,26 82,18" fill="#e4713c" />
+            <path d="M20 46 L26 34 L38 24 L52 18 L64 20 L70 30 L70 40 L60 42 L60 50 L26 50 L20 46 Z" fill="#14814f" />
+            <path d="M20 46 L70 40 L70 50 L20 50 Z" fill="#0a4b30" />
+            <path d="M14 50 L20 46 L70 40 L76 46 L76 54 L14 54 Z" fill="#14814f" />
+            <path
+              d="M10 58 Q10 50 18 50 L78 50 Q86 50 86 58 L86 66 Q86 70 82 70 L82 78 L74 78 L74 70 L64 70 L64 78 L56 78 L56 70 L40 70 L40 78 L32 78 L32 70 L22 70 L22 78 L14 78 L14 70 Q10 70 10 66 Z"
+              fill="#f2a17a" />
+            <rect x="30" y="56" width="9" height="9" fill="#050806" />
+            <rect x="58" y="56" width="9" height="9" fill="#050806" />
+          </svg>
+          <span>Fable Hood<small>Forensic Recovery Console</small></span>
+        </div>
+        <button class="btn btn-ghost notch-sm" id="btn-back-to-landing">← Exit Console</button>
+      </div>
+    </header>
+
+    <!-- Forensics Input Screen -->
+    <div class="wrap" id="forensics-input-screen"
+      style="padding: 80px 0; text-align: center; max-width: 680px; margin: 0 auto;">
+      <h2
+        style="font-family: 'Space Grotesk', sans-serif; font-size: 36px; margin-bottom: 16px; color: var(--emerald);">
+        Robinhood L2 Forensic Console</h2>
+      <p style="color: var(--ink-soft); font-size: 15.5px; line-height: 1.6; margin-bottom: 40px;">
+        Analyze any DeFi contract or tokenized RWA deployed on the Robinhood L2 Network.
+        Runs sandbox trade simulations, ownership key audits, and liquidity lock verifications.
+      </p>
+
+      <div class="scanner notch"
+        style="margin: 0 auto 24px; background: #080c09; border: 1.5px solid var(--line-bright); padding: 10px; display: flex; gap: 10px;">
+        <input type="text" placeholder="Enter contract address (0x...)"
+          style="flex: 1; border: none; background: transparent; font-family: 'JetBrains Mono', monospace; font-size: 14.5px; padding: 14px 16px; color: var(--ink);" />
+        <button class="btn btn-primary notch-sm" id="btn-start-audit">Analyze Asset</button>
+      </div>
+
+      <div class="presets" style="justify-content: center; display: flex; flex-wrap: wrap; gap: 8px;">
+        <span class="preset" style="background: var(--bg-card); border-color: var(--line);">Check a trending
+          token</span>
+        <span class="preset" style="background: var(--bg-card); border-color: var(--line);">Audit before you ape
+          in</span>
+        <span class="preset" style="background: var(--bg-card); border-color: var(--line);">Compare two contracts</span>
+      </div>
+    </div>
+
+    <!-- Scanning / Loading Screen -->
+    <div class="wrap" id="forensics-loading-screen" style="display: none; padding: 80px 0; text-align: center;">
+      <div style="position: relative; width: 100px; height: 100px; margin: 0 auto 30px;">
+        <div
+          style="position: absolute; inset: 0; border: 4px solid rgba(20, 129, 79, 0.1); border-top: 4px solid var(--emerald); border-radius: 50%; animation: spin 1s linear infinite;">
+        </div>
+        <div
+          style="position: absolute; inset: 15px; border: 4px solid rgba(228, 113, 60, 0.1); border-bottom: 4px solid var(--orange); border-radius: 50%; animation: spin-reverse 1.5s linear infinite;">
+        </div>
+      </div>
+      <style>
+        @keyframes spin {
+          0% {
+            transform: rotate(0deg);
+          }
+
+          100% {
+            transform: rotate(360deg);
+          }
+        }
+
+        @keyframes spin-reverse {
+          0% {
+            transform: rotate(360deg);
+          }
+
+          100% {
+            transform: rotate(0deg);
+          }
+        }
+      </style>
+      <h2 class="mono" style="font-size: 24px; color: var(--emerald); margin-bottom: 10px; letter-spacing: 0.05em;">
+        INITIALIZING FORENSIC AUDIT...</h2>
+      <p class="mono" id="loading-address" style="color: var(--ink-soft); font-size: 14px; margin-bottom: 40px;"></p>
+
+      <div class="mono" id="log-terminal"
+        style="max-width: 600px; margin: 0 auto; background: #0b110d; border: 1px solid var(--line); border-radius: 4px; padding: 20px; text-align: left; height: 220px; overflow-y: auto; font-size: 13px; line-height: 1.6; color: #a4bba8; box-shadow: inset 0 2px 8px rgba(0,0,0,0.5);">
+      </div>
+    </div>
+
+    <!-- Results Screen -->
+    <div class="wrap" id="forensics-result-screen" style="display: none; padding: 60px 0;">
+      <div style="display: flex; gap: 32px; flex-wrap: wrap;">
+
+        <!-- Verdict Summary -->
+        <div style="flex: 1; min-width: 320px;">
+          <div
+            style="background: var(--bg-card); border: 1.5px solid var(--line-bright); padding: 32px; margin-bottom: 24px;"
+            class="notch">
+            <span
+              style="font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--orange); text-transform: uppercase; letter-spacing: 0.1em;">Audit
+              Verdict Report</span>
+            <h2
+              style="font-family: 'Space Grotesk', sans-serif; font-size: 32px; margin: 10px 0 20px; line-height: 1.2;"
+              id="target-asset-name">Contract Audit Completed</h2>
+
+            <div style="display: flex; align-items: center; gap: 24px; margin-bottom: 30px;">
+              <div
+                style="position: relative; width: 110px; height: 110px; flex-shrink: 0; background: var(--bg-raised); border-radius: 50%; display: flex; align-items: center; justify-content: center; border: 3px solid var(--emerald);">
+                <div style="text-align: center;">
+                  <span
+                    style="font-family: 'Space Grotesk', sans-serif; font-size: 36px; font-weight: 700; color: var(--emerald);"
+                    id="risk-score-value">94</span>
+                  <div
+                    style="font-size: 9px; font-family: 'JetBrains Mono', monospace; color: var(--ink-soft); text-transform: uppercase; margin-top: -4px;">
+                    Safety Score</div>
+                </div>
+              </div>
+              <div>
+                <div class="pill" id="security-badge" style="margin-bottom: 8px;"><span class="dot"></span> SECURE</div>
+                <p style="margin: 0; font-size: 14px; color: var(--ink-soft); line-height: 1.5;">This asset has cleared
+                  all major forensic recovery checks. Liquidity lock is active and owner permissions are renounced.</p>
+              </div>
+            </div>
+
+            <div style="border-top: 1px solid var(--line); padding-top: 24px;">
+              <div style="display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px;">
+                <div>
+                  <span
+                    style="font-size: 11px; font-family: 'JetBrains Mono', monospace; color: var(--ink-faint); display: block; text-transform: uppercase;">Chain
+                    Network</span>
+                  <span style="font-size: 14px; font-weight: 600; color: var(--ink);">Robinhood Chain L2</span>
+                </div>
+                <div>
+                  <span
+                    style="font-size: 11px; font-family: 'JetBrains Mono', monospace; color: var(--ink-faint); display: block; text-transform: uppercase;">Standard</span>
+                  <span style="font-size: 14px; font-weight: 600; color: var(--ink);">Arbitrum Orbit</span>
+                </div>
+                <div>
+                  <span
+                    style="font-size: 11px; font-family: 'JetBrains Mono', monospace; color: var(--ink-faint); display: block; text-transform: uppercase;">Block
+                    Time</span>
+                  <span style="font-size: 14px; font-weight: 600; color: var(--ink);">100ms Finality</span>
+                </div>
+                <div>
+                  <span
+                    style="font-size: 11px; font-family: 'JetBrains Mono', monospace; color: var(--ink-faint); display: block; text-transform: uppercase;">Gas
+                    Asset</span>
+                  <span style="font-size: 14px; font-weight: 600; color: var(--ink);">Ether (ETH)</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div style="display: flex; gap: 16px;">
+            <button class="btn btn-primary notch-sm" style="flex: 1; justify-content: center;" id="btn-re-scan">Scan New
+              Asset</button>
+            <button class="btn btn-ghost notch-sm" style="flex: 1; justify-content: center;"
+              onclick="alert('Forensic report data exported.')">Export logs</button>
+          </div>
+        </div>
+
+        <!-- Detailed Checks -->
+        <div style="flex: 1.2; min-width: 320px;">
+          <h3 style="font-family: 'Space Grotesk', sans-serif; font-size: 20px; margin: 0 0 20px;">Forensic Risk
+            Breakdown</h3>
+
+          <div style="display: flex; flex-direction: column; gap: 16px;">
+            <div style="background: var(--bg-card); border: 1.5px solid var(--line); padding: 20px;" class="notch-sm">
+              <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 8px;">
+                <h4 style="margin: 0; font-family: 'Space Grotesk', sans-serif; font-size: 16px;">Honeypot Sandbox Audit
+                </h4>
+                <span
+                  style="color: var(--emerald); font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 600;">PASS</span>
+              </div>
+              <p style="margin: 0; font-size: 13.5px; color: var(--ink-soft); line-height: 1.5;">Simulated buy,
+                transfer, and sell sequences passed on mainnet fork without restrictions or sudden hikes.</p>
+            </div>
+
+            <div style="background: var(--bg-card); border: 1.5px solid var(--line); padding: 20px;" class="notch-sm">
+              <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 8px;">
+                <h4 style="margin: 0; font-family: 'Space Grotesk', sans-serif; font-size: 16px;">Liquidity Lock
+                  Verification</h4>
+                <span
+                  style="color: var(--emerald); font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 600;">SECURE</span>
+              </div>
+              <p style="margin: 0; font-size: 13.5px; color: var(--ink-soft); line-height: 1.5;">LP tokens are verified
+                to be locked in a recognized time-release vault for at least 180 days ($482,000 locked).</p>
+            </div>
+
+            <div style="background: var(--bg-card); border: 1.5px solid var(--line); padding: 20px;" class="notch-sm">
+              <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 8px;">
+                <h4 style="margin: 0; font-family: 'Space Grotesk', sans-serif; font-size: 16px;">Ownership Privilege
+                  Scanner</h4>
+                <span
+                  style="color: var(--emerald); font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 600;">RENOUNCED</span>
+              </div>
+              <p style="margin: 0; font-size: 13.5px; color: var(--ink-soft); line-height: 1.5;">Owner address is set to
+                0x00...00. Smart contract contains no backdoor minting or freeze mechanisms.</p>
+            </div>
+
+            <div style="background: var(--bg-card); border: 1.5px solid var(--red); padding: 20px;" class="notch-sm">
+              <div style="display: flex; justify-content: space-between; align-items: start; margin-bottom: 8px;">
+                <h4 style="margin: 0; font-family: 'Space Grotesk', sans-serif; font-size: 16px; color: var(--red);">
+                  Dynamic Tax Integrity Check</h4>
+                <span
+                  style="color: var(--red); font-family: 'JetBrains Mono', monospace; font-size: 12px; font-weight: 600;">FLAGGED</span>
+              </div>
+              <p style="margin: 0; font-size: 13.5px; color: var(--ink-soft); line-height: 1.5;">Bytecode contains
+                dynamic routines that could raise sell fees dynamically after block 40. Potential risk detected.</p>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const landingView = document.getElementById('landing-view');
+      const forensicsView = document.getElementById('forensics-view');
+      const exitConsoleBtn = document.getElementById('btn-back-to-landing');
+      const scanNewBtn = document.getElementById('btn-re-scan');
+
+      const inputScreen = document.getElementById('forensics-input-screen');
+      const loadingScreen = document.getElementById('forensics-loading-screen');
+      const resultScreen = document.getElementById('forensics-result-screen');
+
+      const inputAddr = document.querySelector('#forensics-input-screen .scanner input');
+      const btnStartAudit = document.getElementById('btn-start-audit');
+      const loadingAddr = document.getElementById('loading-address');
+      const logTerminal = document.getElementById('log-terminal');
+
+      const openForensicsConsole = () => {
+        document.body.classList.add('dark-mode');
+        landingView.style.display = 'none';
+        forensicsView.style.display = 'block';
+        inputScreen.style.display = 'block';
+        loadingScreen.style.display = 'none';
+        resultScreen.style.display = 'none';
+        if (inputAddr) {
+          inputAddr.value = '';
+          inputAddr.focus();
+        }
+      };
+
+      const runScan = () => {
+        const address = (inputAddr ? inputAddr.value.trim() : '') || '0xF00D0000000000000000000000000000B453';
+
+        inputScreen.style.display = 'none';
+        loadingScreen.style.display = 'block';
+        resultScreen.style.display = 'none';
+        loadingAddr.innerText = `Target Address: ${address}`;
+        logTerminal.innerHTML = '';
+
+        const logs = [
+          "Initializing connection to Robinhood L2 RPC Node...",
+          "Orbit Node connection established. Syncing block state...",
+          "Analyzing target smart contract: [0xF00D...B453]",
+          "Running simulate_buy_sell() in Arbitrum sandbox environment...",
+          "--> BUY simulation status: Success (gasUsed: 142,391)",
+          "--> TRANSFER sandbox test: Success (unrestricted route)",
+          "--> SELL simulation status: Success (gasUsed: 98,124)",
+          "Auditing owner privileges and role authority keys...",
+          "--> get_ownership() returned null address: 0x000...000",
+          "--> Ownership RENOUNCED. Governance status: SECURE.",
+          "Verifying DEX liquidity pool locking parameters...",
+          "--> LP Locked schedule verified: 180 days remaining ($482K locked)",
+          "Scanning bytecode for hidden tax modification hooks...",
+          "WARNING: Dynamic fee routine detected at block offset 40.",
+          "Assembling forensic safety metrics & risk index..."
+        ];
+
+        let index = 0;
+        const addLog = () => {
+          if (index < logs.length) {
+            const p = document.createElement('div');
+            p.innerText = `[LOG] ${logs[index]}`;
+            if (logs[index].startsWith('WARNING')) {
+              p.style.color = 'var(--red)';
+            } else if (logs[index].startsWith('-->')) {
+              p.style.color = 'var(--emerald)';
+            }
+            logTerminal.appendChild(p);
+            logTerminal.scrollTop = logTerminal.scrollHeight;
+            index++;
+            setTimeout(addLog, 120 + Math.random() * 100);
+          } else {
+            setTimeout(() => {
+              loadingScreen.style.display = 'none';
+              resultScreen.style.display = 'block';
+            }, 600);
+          }
+        };
+
+        setTimeout(addLog, 300);
+      };
+
+      const resetViews = () => {
+        document.body.classList.remove('dark-mode');
+        landingView.style.display = 'block';
+        forensicsView.style.display = 'none';
+      };
+
+      // Landing buttons trigger opening the Console
+      const btnOpenConsoles = document.querySelectorAll('.btn-open-console');
+      btnOpenConsoles.forEach(btn => btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        openForensicsConsole();
+      }));
+
+      // Start scan from input
+      if (btnStartAudit) {
+        btnStartAudit.addEventListener('click', (e) => {
+          e.preventDefault();
+          runScan();
+        });
+      }
+
+      // Presets auto-trigger within input screen
+      const presets = document.querySelectorAll('#forensics-input-screen .preset');
+      const demoAddresses = [
+        '0xF00D0000000000000000000000000000B453',
+        '0x72a17a3c0a4b3014814fe4713c2d32f2f2849200',
+        '0x3c2d32f2f2849200e4713c0a4b3014814fef5b47'
+      ];
+      presets.forEach((preset, idx) => {
+        preset.addEventListener('click', () => {
+          if (inputAddr) {
+            inputAddr.value = demoAddresses[idx];
+            runScan();
+          }
+        });
+      });
+
+      exitConsoleBtn.addEventListener('click', resetViews);
+      scanNewBtn.addEventListener('click', openForensicsConsole);
+    });
+  </script>
+</body>
+
+</html>
