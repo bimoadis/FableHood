@@ -261,7 +261,20 @@ Issued At: ${new Date().toISOString()}`;
   };
 
   const handleExportLogs = () => {
-    showToast('Logs exported successfully.', 'success');
+    try {
+      const blob = new Blob([logs.join('\n')], { type: 'text/plain;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `fablehood_scan_${contractInput || 'log'}.txt`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      showToast('Logs exported successfully.', 'success');
+    } catch (err) {
+      showToast('Failed to export logs.', 'error');
+    }
   };
 
   return (
