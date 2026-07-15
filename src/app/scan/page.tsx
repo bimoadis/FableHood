@@ -262,18 +262,64 @@ Issued At: ${new Date().toISOString()}`;
 
   const handleExportLogs = () => {
     try {
-      const blob = new Blob([logs.join('\n')], { type: 'text/plain;charset=utf-8' });
+      const timestamp = new Date().toLocaleString();
+      let reportText = "";
+      
+      reportText += "======================================================================\n";
+      reportText += "     F A B L E H O O D   F O R E N S I C   S E C U R I T Y   R E P O R T\n";
+      reportText += "======================================================================\n\n";
+      
+      reportText += `Generated on  : ${timestamp}\n`;
+      reportText += `Target Asset  : ${contractInput || 'N/A'}\n`;
+      reportText += `Chain Network : Robinhood Chain L2\n\n`;
+      
+      if (scanResult) {
+        reportText += "----------------------------------------------------------------------\n";
+        reportText += "  ASSET METADATA\n";
+        reportText += "----------------------------------------------------------------------\n";
+        reportText += `Token Name   : ${scanResult.name || 'Unknown'}\n`;
+        reportText += `Token Symbol : ${scanResult.symbol || 'UNKNOWN'}\n`;
+        reportText += `Safety Score : ${scanResult.trustScore}/100\n`;
+        reportText += `Risk Level   : ${scanResult.riskLevel || 'UNKNOWN'}\n\n`;
+        
+        reportText += "----------------------------------------------------------------------\n";
+        reportText += "  AUDIT VERDICT\n";
+        reportText += "----------------------------------------------------------------------\n";
+        reportText += `${scanResult.verdict || 'No verdict available.'}\n\n`;
+        
+        reportText += "----------------------------------------------------------------------\n";
+        reportText += "  FORENSIC FINDINGS\n";
+        reportText += "----------------------------------------------------------------------\n";
+        if (scanResult.findings && scanResult.findings.length > 0) {
+          scanResult.findings.forEach((finding: string, index: number) => {
+            reportText += `[${index + 1}] ${finding}\n`;
+          });
+        } else {
+          reportText += "No specific findings recorded.\n";
+        }
+        reportText += "\n";
+      }
+      
+      reportText += "======================================================================\n";
+      reportText += "  RAW CONSOLE LOG TRAIL\n";
+      reportText += "======================================================================\n";
+      reportText += logs.join('\n') + "\n";
+      reportText += "======================================================================\n";
+      reportText += "                   END OF FORENSIC SECURITY REPORT                    \n";
+      reportText += "======================================================================\n";
+
+      const blob = new Blob([reportText], { type: 'text/plain;charset=utf-8' });
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
-      link.download = `fablehood_scan_${contractInput || 'log'}.txt`;
+      link.download = `fablehood_audit_${scanResult?.symbol || 'token'}_${contractInput?.substring(0, 8) || 'log'}.txt`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
-      showToast('Logs exported successfully.', 'success');
+      showToast('Detailed audit report exported successfully.', 'success');
     } catch (err) {
-      showToast('Failed to export logs.', 'error');
+      showToast('Failed to export report.', 'error');
     }
   };
 
