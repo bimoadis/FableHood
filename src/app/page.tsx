@@ -26,15 +26,11 @@ export default function LandingPage() {
       <header>
         <div className="wrap nav">
           <div className="brand">
-            <svg width="34" height="34" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-              <polygon points="86,6 70,10 62,26 56,40 66,38 74,26 82,18" fill="#e4713c" />
-              <path d="M20 46 L26 34 L38 24 L52 18 L64 20 L70 30 L70 40 L60 42 L60 50 L26 50 L20 46 Z" fill="#14814f" />
-              <path d="M20 46 L70 40 L70 50 L20 50 Z" fill="#0a4b30" />
-              <path d="M14 50 L20 46 L70 40 L76 46 L76 54 L14 54 Z" fill="#14814f" />
-              <path d="M10 58 Q10 50 18 50 L78 50 Q86 50 86 58 L86 66 Q86 70 82 70 L82 78 L74 78 L74 70 L64 70 L64 78 L56 78 L56 70 L40 70 L40 78 L32 78 L32 70 L22 70 L22 78 L14 78 L14 70 Q10 70 10 66 Z" fill="#f2a17a" />
-              <rect x="30" y="56" width="9" height="9" fill="#fafbf9" />
-              <rect x="58" y="56" width="9" height="9" fill="#fafbf9" />
-            </svg>
+            <img 
+              src="/logoFOOD.png" 
+              alt="Fable Hood Logo" 
+              style={{ width: '34px', height: '34px', objectFit: 'contain' }} 
+            />
             <span>$FOOD<small>Fable Hood · Robinhood Chain</small></span>
           </div>
           <nav className="navlinks">
@@ -53,15 +49,12 @@ export default function LandingPage() {
       <section className="hero" id="scan">
         <div className="wrap">
           <div className="scan-target">
-            <svg className="mascot" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
-              <polygon points="86,6 70,10 62,26 56,40 66,38 74,26 82,18" fill="#e4713c" />
-              <path d="M20 46 L26 34 L38 24 L52 18 L64 20 L70 30 L70 40 L60 42 L60 50 L26 50 L20 46 Z" fill="#14814f" />
-              <path d="M20 46 L70 40 L70 50 L20 50 Z" fill="#0a4b30" />
-              <path d="M14 50 L20 46 L70 40 L76 46 L76 54 L14 54 Z" fill="#14814f" />
-              <path d="M10 58 Q10 50 18 50 L78 50 Q86 50 86 58 L86 66 Q86 70 82 70 L82 78 L74 78 L74 70 L64 70 L64 78 L56 78 L56 70 L40 70 L40 78 L32 78 L32 70 L22 70 L22 78 L14 78 L14 70 Q10 70 10 66 Z" fill="#f2a17a" />
-              <rect x="30" y="56" width="9" height="9" fill="#fafbf9" />
-              <rect x="58" y="56" width="9" height="9" fill="#fafbf9" />
-            </svg>
+            <img 
+              className="mascot" 
+              src="/logoFOOD.png" 
+              alt="Fable Hood Mascot" 
+              style={{ width: '80px', height: '80px', objectFit: 'contain' }} 
+            />
             <div className="reticle">
               <span className="corner tl"></span>
               <span className="corner tr"></span>
@@ -277,11 +270,11 @@ export default function LandingPage() {
       <footer>
         <div className="wrap foot-row">
           <div className="foot-brand">
-            <svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg" width="22">
-              <polygon points="86,6 70,10 62,26 56,40 66,38 74,26 82,18" fill="#e4713c" />
-              <path d="M20 46 L26 34 L38 24 L52 18 L64 20 L70 30 L70 40 L60 42 L60 50 L26 50 L20 46 Z" fill="#14814f" />
-              <path d="M10 58 Q10 50 18 50 L78 50 Q86 50 86 58 L86 66 Q86 70 82 70 L82 78 L74 78 L74 70 L64 70 L64 78 L56 78 L56 70 L40 70 L40 78 L32 78 L32 70 L22 70 L22 78 L14 78 L14 70 Q10 70 10 66 Z" fill="#f2a17a" />
-            </svg>
+            <img 
+              src="/logoFOOD.png" 
+              alt="Fable Hood Logo" 
+              style={{ width: '22px', height: '22px', objectFit: 'contain', marginRight: '6px' }} 
+            />
             $FOOD · Fable Hood
           </div>
           <div className="foot-links">
