@@ -144,4 +144,42 @@ export class RobinhoodChainClient {
   async getTransactionReceipt(hash: string): Promise<any> {
     return await this.executeRpcCall('eth_getTransactionReceipt', [hash]);
   }
+
+  /**
+   * Reads ERC-20 token name and symbol from L2 RPC node
+   */
+  async getTokenNameAndSymbol(address: string): Promise<{ name: string; symbol: string }> {
+    try {
+      // name() function signature: 0x06fdde03
+      const nameResult = await this.executeRpcCall('eth_call', [{ to: address, data: '0x06fdde03' }, 'latest']);
+      // symbol() function signature: 0x95d89b41
+      const symbolResult = await this.executeRpcCall('eth_call', [{ to: address, data: '0x95d89b41' }, 'latest']);
+      
+      const decodeString = (hex: string): string => {
+        if (!hex || hex === '0x') return 'Unknown';
+        const cleanHex = hex.startsWith('0x') ? hex.slice(2) : hex;
+        if (cleanHex.length < 128) return 'Unknown';
+        const lengthHex = cleanHex.slice(64, 128);
+        const length = parseInt(lengthHex, 16);
+        if (isNaN(length) || length === 0) return 'Unknown';
+        const dataHex = cleanHex.slice(128, 128 + length * 2);
+        
+        let str = '';
+        for (let i = 0; i < dataHex.length; i += 2) {
+          const charCode = parseInt(dataHex.slice(i, i + 2), 16);
+          if (charCode >= 32 && charCode <= 126) {
+            str += String.fromCharCode(charCode);
+          }
+        }
+        return str.trim() || 'Unknown';
+      };
+      
+      const name = decodeString(nameResult);
+      const symbol = decodeString(symbolResult);
+      return { name, symbol };
+    } catch (err) {
+      console.warn('Error fetching name/symbol via RPC:', err);
+      return { name: 'Unknown', symbol: 'UNKNOWN' };
+    }
+  }
 }

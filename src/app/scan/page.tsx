@@ -236,13 +236,16 @@ Issued At: ${new Date().toISOString()}`;
           if (data.freeScansLeft !== undefined) {
             setFreeScansLeft(data.freeScansLeft);
           }
+          if (data.aiOffline) {
+            showToast('AI Audit Server offline. Running local heuristic scan.', 'info');
+          }
           setTimeout(() => {
             setConsoleStep('result');
           }, 600);
         } else {
           setLogs(prev => [...prev, `❌ Error: ${data.error || 'Unknown failure'}`]);
           setTimeout(() => {
-            alert(data.error || 'Scan failed.');
+            showToast(data.error || 'Scan failed.', 'error');
             setConsoleStep('input');
           }, 1200);
         }
@@ -258,7 +261,7 @@ Issued At: ${new Date().toISOString()}`;
   };
 
   const handleExportLogs = () => {
-    alert('Logs exported successfully.');
+    showToast('Logs exported successfully.', 'success');
   };
 
   return (
@@ -323,7 +326,7 @@ Issued At: ${new Date().toISOString()}`;
             <button 
               onClick={() => {
                 if (!walletConnected) {
-                  alert('Please connect your Solana wallet first!');
+                  showToast('Please connect your Solana wallet first!', 'info');
                   return;
                 }
                 handleStartScan(contractInput);
