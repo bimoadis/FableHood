@@ -37,15 +37,11 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Session/nonce expired' }, { status: 400 });
     }
 
-    // 2. Parse address and nonce from SIWE/SIWS message
-    // Support base58 Solana addresses (32-44 alphanumeric characters) and EVM hex addresses (40 hex characters)
-    const addressMatch = message.match(/Address:\s*([1-9A-HJ-NP-Za-km-z]{32,44})/i) || 
-                        message.match(/^([1-9A-HJ-NP-Za-km-z]{32,44})$/m) ||
-                        message.match(/Address:\s*(0x[a-fA-F0-9]{40})/i) || 
-                        message.match(/^(0x[a-fA-F0-9]{40})$/m);
-    const nonceMatch = message.match(/Nonce:\s*([a-zA-Z0-9]+)/i);
+    const evmMatch = message.match(/(?:Address:\s*)?(0x[a-fA-F0-9]{40})/i);
+    const solanaMatch = message.match(/(?:Address:\s*)?([1-9A-HJ-NP-Za-km-z]{32,44})/i);
 
-    const address = addressMatch?.[1];
+    const address = evmMatch?.[1] || solanaMatch?.[1];
+    const nonceMatch = message.match(/Nonce:\s*([a-zA-Z0-9]+)/i);
     const nonce = nonceMatch?.[1];
 
     if (!address || !nonce) {
